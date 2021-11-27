@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from shapely.affinity import translate, rotate
 from shapely.geometry import Point, Polygon
+from shapely.geometry.base import BaseGeometry
 
 from utils import percent_diff_abs
 
@@ -68,8 +69,11 @@ class AbstrBaseShape(metaclass=ABCMeta):
         """Move all points based on given vector coords."""
         assert(isinstance(vec, Point))
         velocity = self._velocity
-        new_poly = translate(self._poly, vec.x, vec.y)
-        new_poly = translate(new_poly, velocity.x, velocity.y)
+        delta_x = vec.x + velocity.x
+        delta_y = vec.y + velocity.y
+
+        new_poly = translate(self._poly, delta_x, delta_y)
+        valid_move = False
 
         # Want to be able to move pieces for initialization
         should_move = not hard_check
@@ -81,7 +85,10 @@ class AbstrBaseShape(metaclass=ABCMeta):
         # Perform translation if shape is still in bounds
         if should_move:
             self._poly = new_poly
-            self._center = translate(self._center, vec.x, vec.y)
+            self._center = translate(self._center, delta_x, delta_y)
+            valid_move = True
+
+        return valid_move
 
     def clear(self, row_poly):
         """Eliminates row geometry and returns points from area delta."""
@@ -97,10 +104,18 @@ class AbstrBaseShape(metaclass=ABCMeta):
 
         return new_area - old_area
 
-    def check_overlap(self, check_point):
+    def get_distance(self, other_geo):
+        """Returns distance from other geo to internal polygon."""
+        assert(isinstance(other_geo, BaseGeometry))
+        return other_geo.distance(self._poly)
+
+    def check_overlap(self, check_point, offset=True):
         assert(isinstance(check_point, Point))
         assert(isinstance(self._poly, Polygon))
-        mid_point = translate(check_point, 0.5, 0.5)
+        mid_point = check_point
+
+        if offset:
+            mid_point = translate(check_point, 0.5, 0.5)
 
         return self._poly.intersects(mid_point)
 

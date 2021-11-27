@@ -3,7 +3,7 @@ from geometry.GameGrid import GameGrid
 
 grid = GameGrid()
 
-for i in range(100):
+while not grid.game_over:
     print(str(grid))
 
 pass

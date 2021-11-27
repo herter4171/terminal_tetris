@@ -6,7 +6,8 @@ from time import sleep
 from KeyboardInput import KeyBoardInput
 from geometry.blocks.BlockFactory import BlockFactory
 from geometry.AbstrBaseShape import AbstrBaseShape
-from geometry.blocks.LBlocks import LBlockR, LBlockL
+from geometry.GridWatcher import GridWatcher
+
 
 class GameGrid(object):
 
@@ -17,7 +18,7 @@ class GameGrid(object):
     __num_y = 15
 
     # Spawn at top middle
-    __start_point = Point(int(__num_x)/2, 2)
+    __start_point = Point(int(__num_x/2), 2)
 
     # Boundaries of the game box
     __bound_box = box(0, 0, __num_x, __num_y)
@@ -25,14 +26,21 @@ class GameGrid(object):
     # TODO: Make variable
     __sleep_interval = 0.1
 
+    @property
+    def game_over(self):
+        return self._game_over
+
     def __init__(self):
         self._block_gen = BlockFactory(GameGrid.__bound_box)
         self._keyboard = KeyBoardInput()
+        self._grid_watch = GridWatcher(GameGrid.__num_x, GameGrid.__num_y)
         self._num_frames = 0
+        self._game_over = False
 
     def __str__(self):
         sleep(GameGrid.__sleep_interval)
         self._clear_frame()
+        self._check_active_block_placement()
         self._adjust_active_block()
 
         lines = []
@@ -63,8 +71,11 @@ class GameGrid(object):
     def _get_next_block(self):
         """Creates next block at starting point with it set to active."""
         next_block = self._block_gen.get_next_block()
-        next_block.translate(GameGrid.__start_point)
+        valid_move = next_block.translate(GameGrid.__start_point)
         next_block.toggle_active()
+
+        if not valid_move:
+            self._game_over = True
 
         return next_block
 
@@ -109,3 +120,17 @@ class GameGrid(object):
         # Rotate if non-zero
         if rotate_angle:
             active_block.rotate(rotate_angle)
+
+    def _check_active_block_placement(self, threshold=0.1):
+        active_block = AbstrBaseShape.get_active_block()
+        block_is_placed = False
+
+        if active_block:
+            height_pts = self._grid_watch.get_all_bin_height_pts()
+
+            for curr_ht_pt in height_pts:
+                if active_block.get_distance(curr_ht_pt) < threshold:
+                    block_is_placed = True
+                    active_block.toggle_active()
+                    break
+
