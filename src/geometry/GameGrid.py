@@ -1,4 +1,5 @@
 from os import system, name
+import shutil
 from colorama import Style
 from shapely.geometry import Point, box
 from time import sleep
@@ -14,8 +15,8 @@ class GameGrid(object):
     # Character for blocks
     __fill = '█'
 
-    __num_x = 15
-    __num_y = 15
+    __num_x = 20
+    __num_y = 20
 
     # Spawn at top middle
     __start_point = Point(int(__num_x/2), 2)
@@ -24,7 +25,7 @@ class GameGrid(object):
     __bound_box = box(0, 0, __num_x, __num_y)
 
     # TODO: Make variable
-    __sleep_interval = 0.1
+    __sleep_interval = 0.15
 
     @property
     def game_over(self):
@@ -36,10 +37,11 @@ class GameGrid(object):
         self._grid_watch = GridWatcher(GameGrid.__num_x, GameGrid.__num_y)
         self._num_frames = 0
         self._game_over = False
+        cols, self._line_height = shutil.get_terminal_size()
 
     def __str__(self):
         sleep(GameGrid.__sleep_interval)
-        self._clear_frame()
+        #self._clear_frame()
         self._check_active_block_placement()
         self._adjust_active_block()
 
@@ -63,8 +65,10 @@ class GameGrid(object):
                     lines.append(curr_ln)
                     curr_ln = ''
 
-        lines.append(str(self._keyboard))
         self._num_frames += 1
+
+        while len(lines) < self._line_height:
+            lines.append('')
 
         return '\n'.join(lines)
 
@@ -115,7 +119,6 @@ class GameGrid(object):
 
         # Perform translation
         active_block.translate(translate_vec)
-        print(translate_vec)
 
         # Rotate if non-zero
         if rotate_angle:
@@ -123,14 +126,12 @@ class GameGrid(object):
 
     def _check_active_block_placement(self, threshold=0.1):
         active_block = AbstrBaseShape.get_active_block()
-        block_is_placed = False
 
         if active_block:
             height_pts = self._grid_watch.get_all_bin_height_pts()
 
             for curr_ht_pt in height_pts:
                 if active_block.get_distance(curr_ht_pt) < threshold:
-                    block_is_placed = True
                     active_block.toggle_active()
                     break
 
