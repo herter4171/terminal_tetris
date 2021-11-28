@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from shapely.affinity import translate, rotate
 from shapely.geometry import Point, Polygon
 from shapely.geometry.base import BaseGeometry
+from shapely.geometry.multipolygon import MultiPolygon
 
 from utils import percent_diff_abs
 
@@ -55,12 +56,30 @@ class AbstrBaseShape(metaclass=ABCMeta):
     def _velocity(self):
         return Point(0, 1) if self._active else Point(0, 0)
 
-    def __init__(self):
+    @property
+    def y_max(self):
+        assert(isinstance(self._poly, Polygon))
+        x_min, y_min, x_max, y_max = self._poly.bounds
+        return y_max
+
+    def __init__(self, partial_poly):
         """Instantiate with list of points."""
-        self._poly = self._get_initial_poly()
+        # May be constructed with partial geometry
+        if not partial_poly:
+            self._poly = self._get_initial_poly()
+        else:
+            self._poly = partial_poly
+
         self._center = Point(0, 0)
         self._active = False
         AbstrBaseShape.__all_geo.append(self)
+
+    def __hash__(self):
+        return hash(str(self._poly))
+
+    def __eq__(self, other):
+        assert(isinstance(other, AbstrBaseShape))
+        return self._poly == other._poly
 
     def toggle_active(self):
         self._active = not self._active
@@ -101,8 +120,21 @@ class AbstrBaseShape(metaclass=ABCMeta):
         # If area is zero, this shape is fully cleared
         if new_area == 0:
             AbstrBaseShape.__all_geo.remove(self)
+        elif type(self._poly) == MultiPolygon:
+            self._split_multi_poly()
 
-        return new_area - old_area
+        return old_area - new_area
+
+    def _split_multi_poly(self):
+        """Assign one poly to self plus new instance for other."""
+        assert(isinstance(self._poly, MultiPolygon))
+        # Split polygons
+        for other_poly in self._poly[1:]:
+            block_type = type(self)
+            block_type(other_poly)
+
+        # Assign first to self
+        self._poly = self._poly[0]
 
     def get_distance(self, other_geo):
         """Returns distance from other geo to internal polygon."""

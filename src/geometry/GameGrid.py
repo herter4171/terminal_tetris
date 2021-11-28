@@ -16,7 +16,7 @@ class GameGrid(object):
     __fill = '█'
 
     __num_x = 20
-    __num_y = 20
+    __num_y = 30
 
     # Spawn at top middle
     __start_point = Point(int(__num_x/2), 2)
@@ -35,13 +35,14 @@ class GameGrid(object):
         self._block_gen = BlockFactory(GameGrid.__bound_box)
         self._keyboard = KeyBoardInput()
         self._grid_watch = GridWatcher(GameGrid.__num_x, GameGrid.__num_y)
-        self._num_frames = 0
+        self._points = 0
         self._game_over = False
         cols, self._line_height = shutil.get_terminal_size()
 
     def __str__(self):
         sleep(GameGrid.__sleep_interval)
         #self._clear_frame()
+        self._points += self._grid_watch.clear_lines()
         self._check_active_block_placement()
         self._adjust_active_block()
 
@@ -62,10 +63,11 @@ class GameGrid(object):
                 curr_ln += next_char
 
                 if curr_x + 1 == GameGrid.__num_x:
-                    lines.append(curr_ln)
+                    lines.append(curr_ln + '|')
                     curr_ln = ''
 
-        self._num_frames += 1
+        lines.append('-'*GameGrid.__num_x)
+        lines[-1] += '  Points: {}'.format(self._points)
 
         while len(lines) < self._line_height:
             lines.append('')

@@ -10,8 +10,8 @@ class LBlockR(AbstrBaseShape):
     def color(self):
         return Fore.WHITE
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, partial_poly=None):
+        super().__init__(partial_poly)
 
     def _get_initial_poly(self):
         return Polygon([
@@ -31,6 +31,6 @@ class LBlockL(LBlockR):
     def color(self):
         return Fore.YELLOW
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, partial_poly=None):
+        super().__init__(partial_poly)
         self._flip_horizontal()

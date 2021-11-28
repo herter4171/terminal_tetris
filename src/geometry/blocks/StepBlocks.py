@@ -10,8 +10,8 @@ class StepBlockR(AbstrBaseShape):
     def color(self):
         return Fore.CYAN
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, partial_poly=None):
+        super().__init__(partial_poly)
 
     def _get_initial_poly(self):
         return Polygon([
@@ -33,6 +33,6 @@ class StepBlockL(StepBlockR):
     def color(self):
         return Fore.LIGHTGREEN_EX
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, partial_poly=None):
+        super().__init__(partial_poly)
         self._flip_horizontal()

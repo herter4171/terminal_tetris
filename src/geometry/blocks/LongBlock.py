@@ -10,8 +10,8 @@ class LongBlock(AbstrBaseShape):
     def color(self):
         return Fore.BLUE
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, partial_poly=None):
+        super().__init__(partial_poly)
 
     def _get_initial_poly(self):
         return Polygon([

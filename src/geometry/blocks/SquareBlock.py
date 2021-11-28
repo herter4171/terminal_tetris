@@ -10,8 +10,8 @@ class SquareBlock(AbstrBaseShape):
     def color(self):
         return Fore.GREEN
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, partial_poly=None):
+        super().__init__(partial_poly)
 
     def _get_initial_poly(self):
         return Polygon([
